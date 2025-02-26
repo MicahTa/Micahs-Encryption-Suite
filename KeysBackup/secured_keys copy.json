@@ -1,0 +1,5 @@
+
+{
+    "AllMyStuff": {"type": "passwordBased", "encryption_method": "aes", "auth": "73zn4pyQx+UkCNSUXuf96g=="},
+    "newKey": {"type": "keyBased", "secureKey": "aorjgnviuasfhuishf", "encryption_method": "aes", "auth": "73zn4pyQx+UkCNSUXuf96g=="}
+}

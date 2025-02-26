@@ -1,0 +1,85 @@
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+}
+
+.modal-content {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    width: 50%;
+    margin: 15% auto; /* Center the modal vertically and horizontally */
+    text-align: center;
+}
+
+/* Style the buttons */
+.modal-content button {
+    margin: 10px;
+    padding: 10px 20px;
+    border: none;
+    background-color: #007bff; /* Blue */
+    color: #fff;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+/* Style the buttons on hover */
+.modal-content button:hover {
+    background-color: #0056b3; /* Darker blue */
+}
+
+/* Style for the text box */
+.modalTxtBox {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    width: 85%;
+    transition: border-color 0.3s;
+}
+
+/* Style for the text box on focus */
+.modalTxtBox:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Style the options */
+
+#OptionModelOptions {
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    max-width: 100%;
+}
+.optionModOption {
+    padding: 8px 0;
+    margin-bottom: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.optionModOption:hover {
+    background-color: #f0f0f0;
+}
+
+.modalOption-icon {
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.modOption-OptionName {
+    padding-left: 20px;
+    font-size: 16px;
+}

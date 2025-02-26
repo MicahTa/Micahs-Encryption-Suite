@@ -1,0 +1,5 @@
+Here is the current version of Micah's encryption suite.
+This application is currently under development and for window computers.
+Please install the required non-defult pip packages listed in the "pip installs" file
+
+When ready run main.py

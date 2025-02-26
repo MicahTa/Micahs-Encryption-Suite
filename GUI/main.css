@@ -1,0 +1,190 @@
+.mainPage {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+.hr {
+    width: 95%;
+    height: 1px;
+    background-color: #333; /* Black color */
+    border: none; /* Remove any default borders */
+    margin: 0 auto;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    padding: 1px;
+}
+
+.input-error{
+    outline: 1px solid red;
+}
+
+
+/* TopBar */
+
+
+.topbar-icon-container {
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.topbar-icon {
+    margin-right: 10px;
+    cursor: pointer;
+}
+.topbar-icon-grey {
+    color: #646464;
+}
+
+/* File exployer */
+
+#fileExplorer {
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    max-width: 100%;
+    flex: 1;
+    overflow-y: scroll;
+    scrollbar-width: none; /* For Firefox */
+    -ms-overflow-style: none; /* For IE and Edge */
+}
+
+.fileExplorer-icon {
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.fileExplorer-file {
+    padding: 8px 0;
+    margin-bottom: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.fileExplorer-file:hover {
+    background-color: #f0f0f0;
+}
+
+.fileExplorer-file-name {
+    padding-left: 20px;
+    font-size: 16px;
+}
+
+.fileExplorer-selected {
+    background-color: #b3d9ff !important;
+}
+
+/* Search Bar */
+
+.search-bar {
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-directory-button {
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 3px;
+    margin-right: 5px;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.search-directory-button:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.search-directory-button.editable {
+    cursor: text;
+    background-color: transparent;
+    border: none;
+}
+
+.search-directory-button.editable:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.invisible {
+    display: none;
+}
+
+.search-text-input {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    margin-right: 10px;
+    font-size: 16px;
+    color: #fff;
+    background-color: transparent;
+}
+
+
+/* TOGGLE SWITCH (I stole this) */
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+  }
+  
+  .switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+  
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+  
+  input:checked + .slider {
+    background-color: #2196F3;
+  }
+  
+  input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+  }
+  
+  input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+  }
+
+  .slider.round {
+    border-radius: 34px;
+  }
+  
+  .slider.round:before {
+    border-radius: 50%;
+  }

@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File Explorer</title>
+<!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self';"> -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" type="text/css" href="main.css">
+<link rel="stylesheet" type="text/css" href="queue.css">
+<link rel="stylesheet" type="text/css" href="modal.css">
+<link rel="stylesheet" type="text/css" href="sidebar.css">
+<link rel="stylesheet" type="text/css" href="password.css">
+<script src="searchbar.js"></script>
+<script>
+    /* Filters for text input (I stole this shit --> https://jsfiddle.net/KarmaProd/tgn9d1uL/4/) */
+
+    /*
+        The filter must be placed after the html
+        Also comment out unused filters
+    */
+
+    // Restricts input for the given textbox to the given inputFilter.
+    function setInputFilter(textbox, inputFilter, errMsg) {
+    ["input", "keydown", "keyup", "mousedown", "mouseup", "select", "contextmenu", "drop", "focusout"].forEach(function(event) {
+        textbox.addEventListener(event, function(e) {
+        if (inputFilter(this.value)) {
+            // Accepted value
+            if (["keydown","mousedown","focusout"].indexOf(e.type) >= 0){
+            this.classList.remove("input-error");
+            this.setCustomValidity("");
+            }
+            this.oldValue = this.value;
+            this.oldSelectionStart = this.selectionStart;
+            this.oldSelectionEnd = this.selectionEnd;
+        } else if (this.hasOwnProperty("oldValue")) {
+            // Rejected value - restore the previous one
+            this.classList.add("input-error");
+            this.setCustomValidity(errMsg);
+            this.reportValidity();
+            this.value = this.oldValue;
+            this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
+        } else {
+            // Rejected value - nothing to restore
+            this.value = "";
+        }
+        });
+    });
+    }
+
+
+    // Install input filters. Comment unused ones out
+    // ALL
+    /*
+    setInputFilter(document.getElementById("intTextBox"), function(value) {
+    return /^-?\d*$/.test(value); }, "Must be an integer");
+    setInputFilter(document.getElementById("uintTextBox"), function(value) {
+    return /^\d*$/.test(value); }, "Must be an unsigned integer");
+    setInputFilter(document.getElementById("intLimitTextBox"), function(value) {
+    return /^\d*$/.test(value) && (value === "" || parseInt(value) <= 500); }, "Must be between 0 and 500");
+    setInputFilter(document.getElementById("floatTextBox"), function(value) {
+    return /^-?\d*[.,]?\d*$/.test(value); }, "Must be a floating (real) number");
+    setInputFilter(document.getElementById("currencyTextBox"), function(value) {
+    return /^-?\d*[.,]?\d{0,2}$/.test(value); }, "Must be a currency value");
+    setInputFilter(document.getElementById("latinTextBox"), function(value) {
+    return /^[a-z]*$/i.test(value); }, "Must use alphabetic latin characters");
+    setInputFilter(document.getElementById("hexTextBox"), function(value) {
+    return /^[0-9a-f]*$/i.test(value); }, "Must use hexadecimal characters");
+    */
+
+
+    // HTML Useage
+    /* 
+    Integer<input id="intTextBox">
+    Integer &gt;= 0<input id="uintTextBox">
+    Integer &gt;= 0 and &lt;= 500<input id="intLimitTextBox">
+    Float (use . or , as decimal separator)<input id="floatTextBox">
+    Currency (at most two decimal places)<input id="currencyTextBox">
+    A-Z only<input id="latinTextBox">
+    Hexadecimal<input id="hexTextBox">
+    */
+
+    // CSS
+    /* 
+    .input-error{
+        outline: 1px solid red;
+    }
+  */
+    
+</script>
+
+<style>
+    /* Main page */
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        overflow: hidden;
+    }
+    .topbar {
+        background-color: #333;
+        padding: 10px;
+        color: white;
+        max-width: 100%;
+        min-height: 5%;
+    }
+    .scrollableDiv::-webkit-scrollbar {
+        display: none; /* For WebKit browsers */
+    }
+    select {
+        font-size: larger;
+    }
+    button {
+        font-size: larger;
+    }
+    input {
+        font-size: larger;
+    }
+
+</style>
+<style>
+    .viewPage {
+        height: 100vh;
+        display: none;
+        flex-direction: column;
+    }
+</style>
+<style>
+    .settingsPage {
+        height: 100vh;
+        display: none;
+        flex-direction: column;
+    }
+
+    .AddKeyContainer {
+        display: inline;
+    }
+
+
+
+    #SettingsKeys{
+        margin-bottom: 30px;
+    }
+    .settingPageContent {
+        overflow-y: scroll;
+        padding-left: 20px;
+        padding-right: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        background-color: #fff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        max-width: 100%;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        scrollbar-width: none; /* For Firefox */
+        -ms-overflow-style: none; /* For IE and Edge */
+    }
+    .settingArea {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        max-width: 800px;
+    }
+    .settingTile {
+        display: flex;
+        margin-left: 15px;
+        align-items: center;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .keyTitle {
+        cursor: pointer;
+    }
+    .keyTextBox {
+        overflow-y: scroll;
+        white-space: nowrap; /* Prevent text wrapping */
+        flex: 1;
+        padding: 8px 0;
+        display: flex;
+        align-items: center;
+        border: 1px solid #ccc;
+        scrollbar-width: none; /* For Firefox */
+        -ms-overflow-style: none; /* For IE and Edge */
+        padding: 10px;
+        font-size: var(--tileFontSize);
+    }
+    .keyIcons {
+        color: black;
+        margin: auto 0;
+        padding-left: 10px;
+        padding-right: 10px;
+        margin-right: 10px;
+        cursor: pointer;
+    }
+    .keyBlankIcons {
+        cursor: auto;
+        color: #646464;
+    }
+    .keyDeleateIcon {
+        color: red;
+    }
+    .SettingsPassordInputFeildContainer {
+        width: 100%;
+        font-size: 16px;
+        display: flex;
+    }
+    .SettingsPassordInputFeild {
+        flex: 1;
+        font-size: larger;
+    }
+    .SettingsToggleVisibilityIcon{
+        margin: auto 0;
+        padding-left: 25px;
+        cursor: pointer;
+    }
+
+    .settings-other {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        max-width: 400px;
+    }
+</style>
+<style>
+    .helpPage {
+        height: 100vh;
+        display: none;
+        flex-direction: column;
+    }
+</style>
+</head>
+<body>
+    <!-- The pop up box for yes or no options -->
+    <div id="myTFModal" class="modal">
+        <div class="modal-content">
+          <h2 id="ModalTitle">What?</h2>
+          <p id="ModalText">You are not supposed to be seeing this please retry and if the problem persists report this bug. Sorry for the inconvience and thank you for the understanding. ᓚᘏᗢ</p>
+          <button id="ModalButtonTrue">ERROR DO NOT PRESS ME</button>
+          <button id="ModalButtonFalse">ERROR Press me</button>
+        </div>
+    </div>
+    <!-- The pop up box for warnings -->
+    <div id="myOKModal" class="modal">
+        <div class="modal-content">
+          <h2 id="OKModalTitle">Oopsie</h2>
+          <p id="OKModalText">An error done did the thing. ᓚᘏᗢ</p>
+          <button id="ModalButtonOK">Press Me</button>
+        </div>
+    </div>
+    <!-- The pop up box for text input -->
+    <div id="myTxtModal" class="modal">
+        <div class="modal-content">
+          <h2 id="TxtModalTitle">What?</h2>
+          <p id="TxtModalText">You are not supposed to be seeing this please retry and if the problem persists report this bug. Sorry for the inconvience and thank you for the understanding. ᓚᘏᗢ</p>
+          <input class="modalTxtBox" type="text" id="TxtModTextBox" name="name">
+          <button id="TxtModalButtonEnter">Continue</button>
+          <button id="TxtModalButtonCancel">Cancel</button>
+        </div>
+    </div>
+    <!-- The pop up box for password input -->
+    <div id="myPswdModal" class="modal">
+        <div class="modal-content">
+            <h2 id="PswdModalTitle">What?</h2>
+            <p id="PswdModalText">You are not supposed to be seeing this please retry and if the problem persists report this bug. Sorry for the inconvience and thank you for the understanding. ᓚᘏᗢ</p>
+            <div class="PassordInputFeildContainer">
+                <input type="password" class="modalTxtBox" id="PswdModTextBox" name="name">
+                <i class="fa-regular fa-eye-slash ToggleVisibilityIcon" id="PswdModalVisibility"></i>
+            </div>
+            <button id="PswdModalButtonEnter">Continue</button>
+            <button id="PswdModalButtonCancel">Cancel</button>
+        </div>
+    </div>
+    <!-- The pop up box for text input -->
+    <div id="myOptionModal" class="modal">
+        <div class="modal-content">
+            <h2 id="OptionModalTitle">What?</h2>
+            <p id="OptionModalText">You are not supposed to be seeing this please retry and if the problem persists report this bug. Sorry for the inconvience and thank you for the understanding. ᓚᘏᗢ</p>
+            <div id="OptionModelOptions"></div>
+            <button id="OptionModalButtonCancel">Cancel</button>
+        </div>
+    </div>
+    <script src="modal.js"></script>
+        
+
+
+
+
+    <!-- Side bar -->
+    <div class="sidebar">
+        <i id="sidebarPasswordIcon" class="fa-sharp fa-solid fa-shield sidebar-icon" title="Key Page"></i>
+        <i id="SidebarMainIcon" class="fas fa-lock sidebar-icon" title="Main Page"></i>
+        <!-- <i id="SidebarViewIcon"  class="fa-solid fa-binoculars sidebar-icon" title="View Page"></i> -->
+        <i id="SidebarQueueIcon" class="fa-solid fa-bars sidebar-icon" title="List of current actions"></i>
+        <i id="SidebarSettingIcon" class="fa-solid fa-gear sidebar-icon" title="Settings"></i>
+        <i id="SidbarHelpIcon" class="fa-solid fa-circle-question sidebar-icon" title="Help"></i>
+        <i id="SidbarAdditinalIcon" class="fa-solid fa-circle-plus sidebar-icon" title="Create new window"></i>
+    </div>
+    <script>
+        // Change page script
+        function changePage(pageName) {
+            document.getElementById('passwordPage').style.display = "none";
+            document.getElementById('mainPage').style.display = "none";
+            // document.getElementById('viewPage').style.display = "none";
+            document.getElementById('queuePage').style.display = "none";
+            document.getElementById('settingsPage').style.display = "none";
+            document.getElementById('helpPage').style.display = "none";
+
+            document.getElementById(pageName).style.display = "flex";
+        }
+        document.getElementById('sidebarPasswordIcon').addEventListener('click', function() { changePage('passwordPage'); });
+        document.getElementById('SidebarMainIcon').addEventListener('click', function() { changePage('mainPage'); });
+        //document.getElementById('SidebarViewIcon').addEventListener('click', function() { changePage('viewPage'); });
+        document.getElementById('SidebarQueueIcon').addEventListener('click', function() { changePage('queuePage'); });
+        document.getElementById('SidebarSettingIcon').addEventListener('click', function() { changePage('settingsPage'); });
+        document.getElementById('SidbarHelpIcon').addEventListener('click', function() { changePage('helpPage'); });
+
+    </script>
+
+
+    <!-- Pages -->
+    <div class="main-content">
+        <!-- Password page -->
+
+        <div class="passwordPage" id="passwordPage">
+            <div class="main-content">
+                <div class="topbar">
+                    <h2>Enter Key Name and Password</h2>
+                </div>
+                <div class="password-container">
+                    <h1>Key Name</h1>
+                    <select class="SettingsPassordInputFeild" id="keyNameInput">
+                        <option value="Option 1">Select an option</option>
+                        <option value="Option 2">Another option</option>
+                        <option value="Option 3">Yet another option</option>
+                    </select>
+                    <h1>Password</h1>
+                    <div class="PassordInputFeildContainer">
+                        <input type="password" class="SettingsPassordInputFeild" id="passwordInput">
+                        <i class="fa-regular fa-eye-slash ToggleVisibilityIcon" id="ToggleVisibilityIcon"></i>
+                    </div>
+                    <button class="passwordBtn" id="passwordBtn">Enter</button>
+                </div>
+            </div>
+        </div>
+        <script>
+            var salt_file = ''
+
+            const passwordInput = document.getElementById('passwordInput');
+            const showHidePassword = document.getElementById('ToggleVisibilityIcon');
+
+            showHidePassword.addEventListener('click', function() {
+            if (passwordInput.type === 'password') {
+                // <i class="fa-regular fa-eye ToggleVisibilityIcon"></i>
+                passwordInput.type = 'text';
+                showHidePassword.className = 'fa-regular fa-eye ToggleVisibilityIcon';
+                //showHidePassword.appendChild(document.createElement('span')).innerHTML = '&#x1f527;';
+            } else {
+                // <i class="fa-regular fa-eye-slash ToggleVisibilityIcon" id="showHidePassword"></i>
+                passwordInput.type = 'password';
+                showHidePassword.className = 'fa-regular fa-eye-slash ToggleVisibilityIcon';
+                //showHidePassword.appendChild(document.createElement('span')).innerHTML = '&#x1f606;';
+            }
+            });
+
+            function updateSelectOptions(optionsArray) {
+                let selectElement = document.getElementById('keyNameInput');
+
+                // Clear the existing options
+                while (selectElement.firstChild) {
+                    selectElement.removeChild(selectElement.firstChild);
+                }
+                
+                // Add the new options
+                for (let i = 0; i < optionsArray.length; i++) {
+                    let option = document.createElement('option');
+                    option.text = optionsArray[i];
+                    option.value = i.toString(); // Assign a unique value to each option
+                    
+                    selectElement.appendChild(option);
+                }
+            }
+        </script>
+
+
+        <!-- Main page -->
+        <div id="mainPage" class="mainPage">
+            <!-- Top bar -->
+            <div class="topbar">
+                <div class="search-bar" id="searchBar">
+                    <!-- directory buttons will be added here dynamically -->
+                    <input type="text" id="currentDirectoryInput" class="invisible search-text-input" placeholder="Enter directory path">
+                </div>
+                <div class="topbar-icon-container">
+                    <div id="ToggeledIconsContainer">
+                        <i class="fa-solid fa-hard-drive topbar-icon" id="Drive" title="Change Drive"></i>
+                        <i class="fa-solid fa-compact-disc topbar-icon" id="Mount" title="Mount As Virtual Hardrive"></i>
+                        <i class="fa-solid fa-plus topbar-icon" id="NewVHD" title="Create Encrypted Workspace"></i>
+                        <i class="fas fa-pencil-alt topbar-icon" id="Rename" title="Rename"></i>
+                        <i class="fas fa-trash topbar-icon" id="Delete" title="Delete"></i>
+                        <!-- <i class="fas fa-file-lines topbar-icon" id="Open" title="Open"></i> -->
+                        <i class="fas fa-right-left topbar-icon" id="Move" title="Move"></i>
+                        <i class="fas fa-clipboard topbar-icon" id="Copy" title="Copy"></i>
+                        <i class="fas fa-paste topbar-icon" id="Paste" title="Paste"></i>
+                        <i class="fa-solid fa-hand-pointer topbar-icon" id="Select" title="Select"></i>
+                        <i class="fas fa-lock topbar-icon" id="Lock" title="Encrypt"></i>
+                        <i class="fas fa-unlock-alt topbar-icon" id="Unlock" title="Decrypt"></i>
+                        <i class="fa-solid fa-droplet topbar-icon" id="Salt" title="Salt"></i>
+
+                        <!--
+                            gear <i class="fa-solid fa-gear"></i>
+                            roatate right <i class="fa-solid fa-rotate-right"></i>
+                            <i class="fa-solid fa-code"></i>
+                            <i class="fa-solid fa-turn-up"></i>
+                            <i class="fa-solid fa-file-shield"></i>
+                            <i class="fa-solid fa-circle-question"></i>
+                            <i class="fa-solid fa-circle-plus"></i>
+                            <i class="fa-brands fa-square-github"></i>
+
+                            <i class="fa-solid fa-otter"></i>
+
+                        -->
+                    </div>
+                    <div>
+                        <i class="fas fa-folder topbar-icon" id="AddFolder" title="Add Folder"></i>
+                        <i class="fas fa-file topbar-icon" id="AddFile" title="Add File"></i>
+                    </div>
+                </div>
+            </div>
+        
+            <!-- File Explorer -->
+            <div id="fileExplorer"></div>
+            <script src="fileexp.js"></script>
+        </div>
+
+
+        <div class="viewPage" id="viewPage">
+            <div class="main-content">
+                <div class="topbar">
+                    <h2>Open and edit selected files</h2>
+                </div>
+                <h3>Page here for viewing stuff</h3>
+            </div>
+        </div>
+
+        <div class="queuePage" id="queuePage">
+            <div class="topbar">
+                <h2>Queue of pending processes</h2>
+            </div>
+            
+            <div class="queueMain" id="queueMain"></div>
+        </div>
+        <script src="queue.js"></script>
+
+        <div class="settingsPage" id="settingsPage">
+            <div class="topbar">
+                <h2>Edit settings</h2>
+            </div>
+            <div class="settingPageContent">
+                <h2 class="settingsTitle">Manage Keys</h2>
+                <div id="SettingsKeys"></div>
+                <div class="hr"> </div>
+                <div class="settingArea">
+                    <h2 class="settingsTitle">Create New Key</h2>
+                    <p2>Key type</p2>
+                    <select id="SettingsKeyType">
+                        <option value="Key based">Key based</option>
+                        <option value="Password based">Password based</option>
+                    </select>
+                    <br>
+                    <p2>Encryption Method</p2>
+                    <select id="EncryotionType">
+                        <option value="Key based">AES 256</option>
+                    </select>
+                    <br>
+                    <p2>Name</p2>
+                    <input type="text" name="name" id="settingsNewKeyName">
+                    <br>
+                    <p2>Password</p2>
+                    <div class="SettingsPassordInputFeildContainer">
+                        <input type="password" class="SettingsPassordInputFeild" id="SettingsPasswordInputOne">
+                        <i class="fa-regular fa-eye-slash SettingsToggleVisibilityIcon" id="SPIOTVI"></i>
+                    </div>
+                    <br>
+                    <p2>Retype Password</p2>
+                    <div class="SettingsPassordInputFeildContainer">
+                        <input type="password" class="SettingsPassordInputFeild" id="SettingsPasswordInputTwo">
+                        <i class="fa-regular fa-eye-slash SettingsToggleVisibilityIcon" id="SPITTVI"></i>
+                    </div>
+                    <script>
+                        const SettingsPasswordInputOne = document.getElementById('SettingsPasswordInputOne');
+                        const SPIOTVI = document.getElementById('SPIOTVI');
+
+                        SPIOTVI.addEventListener('click', function() {
+                        if (SettingsPasswordInputOne.type === 'password') {
+                            SettingsPasswordInputOne.type = 'text';
+                            SPIOTVI.className = 'fa-regular fa-eye SettingsToggleVisibilityIcon';
+                        } else {
+                            SettingsPasswordInputOne.type = 'password';
+                            SPIOTVI.className = 'fa-regular fa-eye-slash SettingsToggleVisibilityIcon';
+                        }
+                        });
+
+
+                        const SettingsPasswordInputTwo = document.getElementById('SettingsPasswordInputTwo');
+                        const SPITTVI = document.getElementById('SPITTVI');
+
+                        SPITTVI.addEventListener('click', function() {
+                        if (SettingsPasswordInputTwo.type === 'password') {
+                            SettingsPasswordInputTwo.type = 'text';
+                            SPITTVI.className = 'fa-regular fa-eye SettingsToggleVisibilityIcon';
+                        } else {
+                            SettingsPasswordInputTwo.type = 'password';
+                            SPITTVI.className = 'fa-regular fa-eye-slash SettingsToggleVisibilityIcon';
+                        }
+                        });
+
+
+                        function ClearPasswordSettings() {
+                            document.getElementById('settingsNewKeyName').value = "";
+                            document.getElementById('SettingsKeyType').value = "";
+                            document.getElementById('EncryotionType').value = "";
+                            document.getElementById('SettingsPasswordInputOne').value = "";
+                            document.getElementById('SettingsPasswordInputTwo').value = "";
+                        }
+                    </script>
+                    <br>
+                    <button id="CreateNewPaswdButton">Create New Key</button>
+                </div>
+                <div class="hr"> </div>
+                <div class="settingArea">
+                    <h2>Add Key</h2>
+                    <p2>Enter Shared or Server Key String</p2>
+                    <!-- Server and Shared Keys -->
+                    <input id="addSharedKeyInput" type="text" name="name">
+                    <br>
+                    <button id="addSharedKey">Add Key</button>
+                </div>
+                <script>
+                    // Add shared key button
+                    document.getElementById('addSharedKey').addEventListener('click', function() {
+                        let input = document.getElementById('addSharedKeyInput')
+                        let string = input.value;
+                        input.value = '';
+                        if (string != '') {
+                            pywebview.api.keyMeth.addSharedKey(string);
+                        }
+                    })
+                </script>
+                <div class="hr"> </div>
+                    <!-- Other settings -->
+                <div class="settings-other">
+
+                    <h2>Other Settings</h2>
+
+                    <button>Restore key file backup</button>
+                    <br>
+                    <button>Create key file backup</button>
+                    <br>
+                    <button>Create sqeduled backup</button>
+                    <br>
+
+                    <p2>Show hidden files</p2>
+                    <label class="switch">
+                        <input type="checkbox" id="ShowHiddenCheckbox">
+                        <span class="slider round"></span>
+                    </label>
+
+                    <script>
+                        document.getElementById('ShowHiddenCheckbox').addEventListener('click', function() { pywebview.api.toggleHiddenFileVisibility(); });
+                    </script>
+
+                    <br>
+
+                    <p2>Max threads</p2>
+                    <input id="MaxThreadsInput">
+                    <script>
+                        // Add the number only filter to the input
+                        setInputFilter(document.getElementById("MaxThreadsInput"), function(value) {
+                            return /^\d*$/.test(value) && (value === "" || parseInt(value) <= 999); }, "Must be between 0 and 999");
+                    </script>
+
+
+                </div>
+                <br>
+            </div>
+        </div>
+        <script src="settings.js"></script>
+
+        <div class="helpPage" id="helpPage">
+            <div class="main-content">
+                <div class="topbar">
+                    <h2>Help and Information Page</h2>
+                </div>
+                <h3>Help page goes here (:</h3>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Exits out of the entire procsses
+        class kissMyAss { // Ingnore this lol
+            exit(bool) {
+                if (bool) {
+                    pywebview.api.close();
+                }
+            }
+        }
+
+        function make() {
+            // Show hidden files toggle
+            const ShowHiddenCheckbox = document.getElementById("ShowHiddenCheckbox");
+            // Load all of the users settings
+            pywebview.api.applySettings();
+            // Load window varible in keyMeth class
+            pywebview.api.keyMeth.loadWindow();
+
+
+            fileExp.make();
+            // New Page Button
+            document.getElementById('SidbarAdditinalIcon').addEventListener('click', function() { pywebview.api.newPage(); });
+    
+            /* This handels the pressing of the Menu's password button */
+            document.getElementById('passwordBtn').addEventListener('click', function() {
+                const selectElement = document.getElementById('keyNameInput');
+                pywebview.api.keyMeth.handelKeyIndex(passwordInput.value, selectElement.value, salt_file);
+                passwordInput.value = '';
+            });
+
+            // This handels the pressing of the Menu's password button
+            document.getElementById('sidebarPasswordIcon').addEventListener('click', function() {
+                changePage('passwordPage');
+                pywebview.api.keyMeth.updateKeyNames();
+            });
+
+            // This handels the pressing of the Menu's settings button
+            document.getElementById('SidebarSettingIcon').addEventListener('click', function() {
+                changePage('settingsPage');
+                pywebview.api.keyMeth.updateKeyNames();
+            });
+
+            document.getElementById('CreateNewPaswdButton').addEventListener('click', function() {
+                const Name = document.getElementById('settingsNewKeyName').value;
+                const KeyType = document.getElementById('SettingsKeyType').value;
+                const EncType = document.getElementById('EncryotionType').value;
+                const pswd = document.getElementById('SettingsPasswordInputOne').value;
+                const pswdRe = document.getElementById('SettingsPasswordInputTwo').value;
+
+                if (pswd != pswdRe) {
+                    showModalOK("Passwords Do Not Match", "The two passwords you just typed did not match please retry. (:", "Okay");
+                    return 0
+                }
+
+                let KeyTypePush = "PD"
+
+                if (KeyType == "Key based") {
+                    KeyTypePush = "KD"
+                } else {
+                    KeyTypePush = "PD"
+                }
+
+                let encryptionMethodPush = "AES256"
+
+                //name, password, type: str = "PD", method: str = "AES 256"
+                showModalOK("Creating New Key", `The key \"${Name}\" is being created, this will take a few seconds and you will be notified when it's finished.`, "Okay");
+                pywebview.api.keyMeth.createKey(Name, pswd, KeyTypePush, encryptionMethodPush);
+            });
+
+            // Class that exits the entire process
+            kma = new kissMyAss;
+
+        }
+    </script>
+</body>
+</html>
