@@ -1,5 +1,4 @@
 class fileexp {
-    // Mkes eveything
     constructor() {
         // Holds all the files in current dir
         this.files = [{name: "LOADING...", isDirectory: true, isEncrypted: false}]
@@ -9,10 +8,10 @@ class fileexp {
         // Icons and icon varibles
         this.fileExplorer = document.getElementById('fileExplorer');
         this.ToggeledIconsContainer = document.getElementById('ToggeledIconsContainer');
-        this.selectedFiles = {name: [], real_name: []};
-        this.ClipOcupied = [];
+        this.ClipOcupied = []; // What you are copying
         this.selectingType = ''; // decrypt encrypt move or ''
-        this.selectingWhat = [];
+        this.highlightedCells = {name: [], real_name: []}; // Files that are highlighted
+        this.selectedCells = []; // Files selected for an action
 
         this.renameIcon = document.getElementById('Rename');
         this.deleteIcon = document.getElementById('Delete');
@@ -91,10 +90,10 @@ class fileexp {
     }
     renameAction = (newname) => {
         const location = this.searchBar.getPath()
-        pywebview.api.rename(`${location}/${this.selectedFiles.real_name[0]}`, `${location}/${newname}`)
+        pywebview.api.rename(`${location}/${this.highlightedCells.real_name[0]}`, `${location}/${newname}`)
     }
     deleteIconClickHandler = () => {
-        showModalTF(this.deleateVerifyOption, 'Are you sure?', `This operation will delete ${this.selectedFiles.name.length} item(s)`, 'Yes', 'No');
+        showModalTF(this.deleateVerifyOption, 'Are you sure?', `This operation will delete ${this.highlightedCells.name.length} item(s)`, 'Yes', 'No');
     }
     deleateVerifyOption = (Option) => {
         if (Option) {
@@ -102,21 +101,21 @@ class fileexp {
         }    
     }
     deleateAfterOption = (Option) => {
-        pywebview.api.deleate(this.selectedFiles.real_name, Option);
+        pywebview.api.deleate(this.highlightedCells.real_name, Option);
     }
     lockIconClickHandler = () => {
         this.selectingType = 'encrypt';
         const location = this.searchBar.getPath()
-        for (let i of this.selectedFiles.real_name) {
-            this.selectingWhat.push(`${location}/${i}`);
+        for (let i of this.highlightedCells.real_name) {
+            this.selectedCells.push(`${location}/${i}`);
         }
         this.toggleIcons();
     }
     unlockIconClickHandler = () => {
         this.selectingType = 'decrypt';
         const location = this.searchBar.getPath()
-        for (let i of this.selectedFiles.real_name) {
-            this.selectingWhat.push(`${location}/${i}`);
+        for (let i of this.highlightedCells.real_name) {
+            this.selectedCells.push(`${location}/${i}`);
         }
         this.toggleIcons();
     }
@@ -126,15 +125,15 @@ class fileexp {
     moveIconClickHandler = () => {
         this.selectingType = 'move';
         const location = this.searchBar.getPath()
-        for (let i of this.selectedFiles.real_name) {
-            this.selectingWhat.push(`${location}/${i}`);
+        for (let i of this.highlightedCells.real_name) {
+            this.selectedCells.push(`${location}/${i}`);
         }
         this.toggleIcons();
     }
     copyIconClickHandler = () => {
         this.ClipOcupied = []
-        for (let i = 0; i < this.selectedFiles.real_name.length; i++) {
-            this.ClipOcupied.push(`${this.searchBar.getPath()}/${this.selectedFiles.real_name[i]}`)
+        for (let i = 0; i < this.highlightedCells.real_name.length; i++) {
+            this.ClipOcupied.push(`${this.searchBar.getPath()}/${this.highlightedCells.real_name[i]}`)
         }
         this.toggleIcons();
     }
@@ -143,25 +142,25 @@ class fileexp {
     }
     selectIconClickHandler = () => {
         //decrypt encrypt move
-        console.log(this.selectingWhat)
+        console.log(this.selectedCells)
         if (this.selectingType == 'decrypt'){
             showModalTF(this.decrypt, 'Remove existing files', 'If files with the same name already exist do you want to overwrite them?', 'Yes', 'No')
         } else if (this.selectingType == 'encrypt') {
             showModalTF(this.encrypt, 'Remove existing files', 'If files with the same name already exist do you want to overwrite them?', 'Yes', 'No')
         } else if (this.selectingType == 'move') {
-            pywebview.api.move(this.selectingWhat, `${this.searchBar.getPath()}`)
-            this.selectingWhat = [];
+            pywebview.api.move(this.selectedCells, `${this.searchBar.getPath()}`)
+            this.selectedCells = [];
         }
         this.selectingType = '';
         this.toggleIcons();
     }
     decrypt = (removeIfAlreadyExits) => {
-        pywebview.api.decrypt(this.selectingWhat, `${this.searchBar.getPath()}`, removeIfAlreadyExits)
-        this.selectingWhat = [];
+        pywebview.api.decrypt(this.selectedCells, `${this.searchBar.getPath()}`, removeIfAlreadyExits)
+        this.selectedCells = [];
     }
     encrypt = (removeIfAlreadyExits) => {
-        pywebview.api.encrypt(this.selectingWhat, `${this.searchBar.getPath()}`, removeIfAlreadyExits)
-        this.selectingWhat = [];
+        pywebview.api.encrypt(this.selectedCells, `${this.searchBar.getPath()}`, removeIfAlreadyExits)
+        this.selectedCells = [];
     }
     addFolderIconClickHandler = () => {
         showModalTxt(this.folderIconOption, 'Create Folder', 'Enter the name of the new folder', 'Continue', 'Cancel');
@@ -184,7 +183,7 @@ class fileexp {
         pywebview.api.newFile(`${this.searchBar.getPath()}/${this.fileName}`, enc)
     }
     saltIconClickHandler = () => {
-        salt_file = this.selectedFiles.real_name[0];
+        salt_file = this.highlightedCells.real_name[0];
         if (salt_file === undefined) {
             salt_file = '';
         }
@@ -212,15 +211,15 @@ class fileexp {
             this.pasteIcon.removeEventListener('click', this.pasteIconClickHandler);
             this.pasteIcon.classList.add('topbar-icon-grey');
         }
-        // Remane icon
-        let count = this.selectedFiles.name.length;
+        // Rename icon
+        let count = this.highlightedCells.name.length;
         if (count != 1) {
             this.renameIcon.removeEventListener('click', this.renameIconClickHandler);
             this.renameIcon.classList.add('topbar-icon-grey');
         }
         // Salt icon
         if (count < 2) {
-            let tmp = this.selectedFiles.real_name[0];
+            let tmp = this.highlightedCells.real_name[0];
             if (tmp != undefined) {
                 if (this.findIsDirectory(tmp)) {
                     this.saltIcon.removeEventListener('click', this.saltIconClickHandler);
@@ -254,15 +253,15 @@ class fileexp {
         const index = (fileElement.getAttribute('data-index'));
         const index_FRN = (fileElement.getAttribute('data-RN-Index'));
         if (fileElement.classList.contains('fileExplorer-selected')) {
-            this.selectedFiles.name.push(index);
-            this.selectedFiles.real_name.push(index_FRN);
+            this.highlightedCells.name.push(index);
+            this.highlightedCells.real_name.push(index_FRN);
         } else {
-            const indexToRemove = this.selectedFiles.real_name.indexOf(index_FRN);
+            const indexToRemove = this.highlightedCells.real_name.indexOf(index_FRN);
             
             if (indexToRemove !== -1) {
                 // Remove the element at the index from both arrays
-                this.selectedFiles.real_name.splice(indexToRemove, 1);
-                this.selectedFiles.name.splice(indexToRemove, 1);
+                this.highlightedCells.real_name.splice(indexToRemove, 1);
+                this.highlightedCells.name.splice(indexToRemove, 1);
             }
             //this.selectedFiles = this.selectedFiles.filter(idx => idx.real_name !== index_FRN);
         }
@@ -272,11 +271,11 @@ class fileexp {
     deselect_all() {
         const fileElements = document.querySelectorAll('.file');
         fileElements.forEach(fileElement => {
-            if (this.selectedFiles.name.includes(parseInt(fileElement.getAttribute('data-index')))) {
+            if (this.highlightedCells.name.includes(parseInt(fileElement.getAttribute('data-index')))) {
                 fileElement.classList.remove('fileExplorer-selected');
             }
         });
-        this.selectedFiles = {name: [], real_name: []};
+        this.highlightedCells = {name: [], real_name: []};
     }
 
     // This will open a file in a new window
@@ -324,7 +323,7 @@ class fileexp {
             fileElement.setAttribute('data-RN-Index', nm_for_lstner_RN);
             fileElement.addEventListener('click', (event) => {
                 this.toggleSelection(fileElement);
-                console.log(this.selectedFiles);
+                console.log(this.highlightedCells);
                 this.toggleIcons();
                 event.stopPropagation();
             });

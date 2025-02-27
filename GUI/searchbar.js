@@ -1,5 +1,6 @@
 class searchbar {
     constructor() {
+        // TODO make this work for both windows and linux
         this.workingDirectory = []; // Initial working directory
         this.searchBar = document.getElementById('searchBar');
         this.currentDirectoryInput = document.getElementById('currentDirectoryInput');
@@ -7,12 +8,9 @@ class searchbar {
         this.linux = false
 
         
-        // Event listener to detect when space to right is pressed
+        // Let user type in place manually
         this.searchBar.addEventListener('click', (event) => {
-
-            // Get the target element of the click event
             const target = event.target;
-
             // Check if the click target is not a directory button or the text input field
             if (!target.classList.contains('search-directory-button') && !target.classList.contains('search-text-input')) {
                 // If the click is not on a directory button or the text input field, collapse the buttons into the text input
@@ -22,7 +20,6 @@ class searchbar {
 
         // Event listener to show directory buttons when exiting the input field
         this.currentDirectoryInput.addEventListener('blur', () => {
-
             // Split the value of the input field by '/'
             this.workingDirectory = this.currentDirectoryInput.value.replace(/\\/g, '/').split('/');
             this.expandToButton();

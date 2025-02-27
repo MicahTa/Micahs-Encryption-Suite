@@ -83,9 +83,6 @@ class Api:
             json.dump(data, f)
         self.applySettings(False)
 
-    def newPage(self): #TODO Reopen the program Reentry of password manditory
-        pass
-
     def load(self):
         """ Starts the js code that relies on the API; This will run soon as the API starts working """
         #TODO Sent weather or not its running on windows or linux to front end (Send ti searchbar.js)
@@ -173,7 +170,7 @@ class Api:
             self.prev_contents = contents
             self.dir = value
         except: # Raise an error and back peddle
-            window.evaluate_js(f'showModalOK("Permission Denied", "There was an error while trying to open \\\"{value}\\\" you probably don\'t have permission or the file doesn\'t exist", "Okay");')
+            modal.ok("Permission Denied", f"There was an error while trying to open \\\"{value}\\\" you probably don\'t have permission or the file doesn\'t exist")
             contents = os.listdir(self.dir)
             value = self.dir
 
@@ -198,7 +195,7 @@ class Api:
         # TODO Put deleated items in recycling bin linux?
         for target in targets:
             error = remove.remove(f'{self.dir}/{target}', secure)
-            if error: window.evaluate_js(f'showModalOK("Permission Denied", "There was an error while trying to remove \\\"{target}\\\" you probably don\'t have permission", "Okay");')
+            if error: modal.ok("Permission Denied", f"There was an error while trying to remove \\\"{target}\\\" you probably don\'t have permission")
         self.refreshFileExp()
 
     def encrypt(self, targets: str, destination: str, overWrightPreExisiting: bool = False):
@@ -241,7 +238,7 @@ class Api:
         # TODO Fix the renameing of the file, - copy(2) && fix it when your coping something encrypted
         for target in targets:
             error = copy.go_through_c_start(target, destination)
-            if error: window.evaluate_js(f'showModalOK("Permission Denied", "There was an error while trying to copy \\\"{target}\\\". We tried our best and copied all the files we could however 1 or more did not copy and you probably don\'t have permission", "Okay");')
+            if error: modal.ok("Permission Denied", f"There was an error while trying to copy \\\"{target}\\\". We tried our best and copied all the files we could however 1 or more did not copy and you probably don\'t have permission")
         self.refreshFileExp()
 
     def rename(self, target: str, new_Name: str, encryptedNameOverWright: bool = False):
@@ -259,8 +256,7 @@ class Api:
                 os.rename(target, new_Name)
             self.refreshFileExp()
         except Exception as e:
-            window.evaluate_js(f'showModalOK("Permission Denied", "There was an error while trying to rename \\\"{target}\\\" you probably don\'t have permission or the file doesn\'t exist {e}", "Okay");')
-    
+            modal.ok("Permission Denied", f"There was an error while trying to rename \\\"{target}\\\" you probably don\'t have permission or the file doesn\'t exist {e}")    
     def newFile(self, location: str, encrpytion: bool):
         """
         Creates a new file
@@ -280,8 +276,7 @@ class Api:
                     pass
             self.refreshFileExp()
         except:
-            window.evaluate_js(f'showModalOK("Permission Denied", "There was an error while trying to make the file \\\"{location}\\\" you probably don\'t have permission or you used am illegal character \\/\":*?<>|", "Okay");')
-
+            modal.ok("Permission Denied", f"There was an error while trying to make the file \\\"{location}\\\" you probably don\'t have permission or you used am illegal character \\/\":*?<>|")
 
     def newFolder(self, location: str, encrpytion: bool):
         """
@@ -299,10 +294,7 @@ class Api:
                 os.makedirs(location, exist_ok=False)
             self.refreshFileExp()
         except:
-            window.evaluate_js(f'showModalOK("Permission Denied", "There was an error while trying to make the file \\\"{location}\\\" you probably don\'t have permission or you used an illegal character \\/\":*?<>|", "Okay");')
-
-
-
+            modal.ok("Permission Denied", f"There was an error while trying to make the file \\\"{location}\\\" you probably don\'t have permission or you used an illegal character \\/\":*?<>|")
 
 
 
@@ -334,7 +326,7 @@ class Api:
         while self.fuckyou:
             time.sleep(.1)
         time.sleep(.1)
-        window.evaluate_js(f'showModalTF(kma.exit, \'Do you want to exit?\', \'Do you really want to exit? You have {running} item(s) running and {pending} item(s) pending.\', \'Close\', \'Cancel\')')
+        modal.tf("kma.exit", "Do you want to exit?", f"Do you really want to exit? You have {running} item(s) running and {pending} item(s) pending.")
 
     def close(self):
         """

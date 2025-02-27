@@ -51,16 +51,30 @@ class modal:
         if code in codes:
             if codes[code]["type"] == "ok":
                 self.ok(codes[code]["title"], codes[code]["text"], codes[code]["button"])
-        else:
-            raise
+            else: raise Exception("Invalid Modal Type")
+        else: raise Exception("Invalid Modal Code")
+
 
     @classmethod
-    def ok(self, title: str = None, text: str = None, button: str = "Okay"):
+    def ok(self, title: str, text: str, button: str = "Okay"):
         """
         Title -> The title of the modal
-        Text -> If you do not have a specific error code use this instead
+        Text -> Text of the modal
         Button -> Text to be displayed on button
         """
         self.defineWin()
 
         window.evaluate_js(f'showModalOK("{title}", "{text}", "{button}");')
+    
+    @classmethod
+    def tf(self, function, title: str, text: str, true: str = "Yes", false: str = "No"):
+        """"
+        funtion -> javaScript funtion the output will be directed towards
+        Title -> Title of the modal
+        Text -> Text of the modal
+        true -> text on true button
+        false -> text on false button
+        """
+        self.defineWin()
+
+        window.evaluate_js(f'showModalTF({function}, \'{title}?\', \'{text}\', \'{true}\', \'{false}\')')

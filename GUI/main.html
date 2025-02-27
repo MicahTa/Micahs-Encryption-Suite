@@ -14,11 +14,7 @@
 <script src="searchbar.js"></script>
 <script>
     /* Filters for text input (I stole this shit --> https://jsfiddle.net/KarmaProd/tgn9d1uL/4/) */
-
-    /*
-        The filter must be placed after the html
-        Also comment out unused filters
-    */
+    /* The filter must be placed after the html */
 
     // Restricts input for the given textbox to the given inputFilter.
     function setInputFilter(textbox, inputFilter, errMsg) {
@@ -122,13 +118,7 @@
     }
 
 </style>
-<style>
-    .viewPage {
-        height: 100vh;
-        display: none;
-        flex-direction: column;
-    }
-</style>
+
 <style>
     .settingsPage {
         height: 100vh;
@@ -237,6 +227,7 @@
 </style>
 </head>
 <body>
+<!-- ################################################### Modal ################################################################# -->
     <!-- The pop up box for yes or no options -->
     <div id="myTFModal" class="modal">
         <div class="modal-content">
@@ -291,7 +282,7 @@
 
 
 
-
+<!-- ################################################### Side Bar ################################################################# -->
     <!-- Side bar -->
     <div class="sidebar">
         <i id="sidebarPasswordIcon" class="fa-sharp fa-solid fa-shield sidebar-icon" title="Key Page"></i>
@@ -307,7 +298,6 @@
         function changePage(pageName) {
             document.getElementById('passwordPage').style.display = "none";
             document.getElementById('mainPage').style.display = "none";
-            // document.getElementById('viewPage').style.display = "none";
             document.getElementById('queuePage').style.display = "none";
             document.getElementById('settingsPage').style.display = "none";
             document.getElementById('helpPage').style.display = "none";
@@ -316,7 +306,6 @@
         }
         document.getElementById('sidebarPasswordIcon').addEventListener('click', function() { changePage('passwordPage'); });
         document.getElementById('SidebarMainIcon').addEventListener('click', function() { changePage('mainPage'); });
-        //document.getElementById('SidebarViewIcon').addEventListener('click', function() { changePage('viewPage'); });
         document.getElementById('SidebarQueueIcon').addEventListener('click', function() { changePage('queuePage'); });
         document.getElementById('SidebarSettingIcon').addEventListener('click', function() { changePage('settingsPage'); });
         document.getElementById('SidbarHelpIcon').addEventListener('click', function() { changePage('helpPage'); });
@@ -326,13 +315,18 @@
 
     <!-- Pages -->
     <div class="main-content">
-        <!-- Password page -->
+<!-- ################################################# Password Page ############################################################## -->
+
 
         <div class="passwordPage" id="passwordPage">
             <div class="main-content">
+        
+
+
                 <div class="topbar">
                     <h2>Enter Key Name and Password</h2>
                 </div>
+
                 <div class="password-container">
                     <h1>Key Name</h1>
                     <select class="SettingsPassordInputFeild" id="keyNameInput">
@@ -340,36 +334,42 @@
                         <option value="Option 2">Another option</option>
                         <option value="Option 3">Yet another option</option>
                     </select>
+
                     <h1>Password</h1>
+                    <!-- TODO on windows the password feild already has a toggle view option -->
                     <div class="PassordInputFeildContainer">
                         <input type="password" class="SettingsPassordInputFeild" id="passwordInput">
                         <i class="fa-regular fa-eye-slash ToggleVisibilityIcon" id="ToggleVisibilityIcon"></i>
                     </div>
+
                     <button class="passwordBtn" id="passwordBtn">Enter</button>
                 </div>
+
+
+
             </div>
         </div>
+
         <script>
             var salt_file = ''
 
             const passwordInput = document.getElementById('passwordInput');
             const showHidePassword = document.getElementById('ToggleVisibilityIcon');
 
+            /* Toggeles veiwing password */
             showHidePassword.addEventListener('click', function() {
             if (passwordInput.type === 'password') {
-                // <i class="fa-regular fa-eye ToggleVisibilityIcon"></i>
                 passwordInput.type = 'text';
                 showHidePassword.className = 'fa-regular fa-eye ToggleVisibilityIcon';
-                //showHidePassword.appendChild(document.createElement('span')).innerHTML = '&#x1f527;';
             } else {
-                // <i class="fa-regular fa-eye-slash ToggleVisibilityIcon" id="showHidePassword"></i>
                 passwordInput.type = 'password';
                 showHidePassword.className = 'fa-regular fa-eye-slash ToggleVisibilityIcon';
-                //showHidePassword.appendChild(document.createElement('span')).innerHTML = '&#x1f606;';
             }
             });
 
+            ////////////////////////////////////////////////////////////////////////////////
             function updateSelectOptions(optionsArray) {
+                /* Updates the options in the password page */
                 let selectElement = document.getElementById('keyNameInput');
 
                 // Clear the existing options
@@ -389,14 +389,17 @@
         </script>
 
 
-        <!-- Main page -->
+<!-- ################################################# Main Page ############################################################## -->
         <div id="mainPage" class="mainPage">
-            <!-- Top bar -->
+
+
+            
             <div class="topbar">
+                <!-- Search bar -->
                 <div class="search-bar" id="searchBar">
-                    <!-- directory buttons will be added here dynamically -->
                     <input type="text" id="currentDirectoryInput" class="invisible search-text-input" placeholder="Enter directory path">
                 </div>
+                 <!-- Icons -->
                 <div class="topbar-icon-container">
                     <div id="ToggeledIconsContainer">
                         <i class="fa-solid fa-hard-drive topbar-icon" id="Drive" title="Change Drive"></i>
@@ -404,7 +407,6 @@
                         <i class="fa-solid fa-plus topbar-icon" id="NewVHD" title="Create Encrypted Workspace"></i>
                         <i class="fas fa-pencil-alt topbar-icon" id="Rename" title="Rename"></i>
                         <i class="fas fa-trash topbar-icon" id="Delete" title="Delete"></i>
-                        <!-- <i class="fas fa-file-lines topbar-icon" id="Open" title="Open"></i> -->
                         <i class="fas fa-right-left topbar-icon" id="Move" title="Move"></i>
                         <i class="fas fa-clipboard topbar-icon" id="Copy" title="Copy"></i>
                         <i class="fas fa-paste topbar-icon" id="Paste" title="Paste"></i>
@@ -412,20 +414,6 @@
                         <i class="fas fa-lock topbar-icon" id="Lock" title="Encrypt"></i>
                         <i class="fas fa-unlock-alt topbar-icon" id="Unlock" title="Decrypt"></i>
                         <i class="fa-solid fa-droplet topbar-icon" id="Salt" title="Salt"></i>
-
-                        <!--
-                            gear <i class="fa-solid fa-gear"></i>
-                            roatate right <i class="fa-solid fa-rotate-right"></i>
-                            <i class="fa-solid fa-code"></i>
-                            <i class="fa-solid fa-turn-up"></i>
-                            <i class="fa-solid fa-file-shield"></i>
-                            <i class="fa-solid fa-circle-question"></i>
-                            <i class="fa-solid fa-circle-plus"></i>
-                            <i class="fa-brands fa-square-github"></i>
-
-                            <i class="fa-solid fa-otter"></i>
-
-                        -->
                     </div>
                     <div>
                         <i class="fas fa-folder topbar-icon" id="AddFolder" title="Add Folder"></i>
@@ -437,27 +425,25 @@
             <!-- File Explorer -->
             <div id="fileExplorer"></div>
             <script src="fileexp.js"></script>
+
+
         </div>
 
-
-        <div class="viewPage" id="viewPage">
-            <div class="main-content">
-                <div class="topbar">
-                    <h2>Open and edit selected files</h2>
-                </div>
-                <h3>Page here for viewing stuff</h3>
-            </div>
-        </div>
-
+<!-- ################################################# Queue Page ############################################################## -->
         <div class="queuePage" id="queuePage">
+
+
             <div class="topbar">
                 <h2>Queue of pending processes</h2>
             </div>
             
             <div class="queueMain" id="queueMain"></div>
+
+
         </div>
         <script src="queue.js"></script>
 
+<!-- ################################################# Settings Page ############################################################## -->
         <div class="settingsPage" id="settingsPage">
             <div class="topbar">
                 <h2>Edit settings</h2>
@@ -466,6 +452,8 @@
                 <h2 class="settingsTitle">Manage Keys</h2>
                 <div id="SettingsKeys"></div>
                 <div class="hr"> </div>
+
+                <!-- /////////////////////////// Create New Key ////////////////////////////////////// -->
                 <div class="settingArea">
                     <h2 class="settingsTitle">Create New Key</h2>
                     <p2>Key type</p2>
@@ -493,46 +481,12 @@
                         <input type="password" class="SettingsPassordInputFeild" id="SettingsPasswordInputTwo">
                         <i class="fa-regular fa-eye-slash SettingsToggleVisibilityIcon" id="SPITTVI"></i>
                     </div>
-                    <script>
-                        const SettingsPasswordInputOne = document.getElementById('SettingsPasswordInputOne');
-                        const SPIOTVI = document.getElementById('SPIOTVI');
-
-                        SPIOTVI.addEventListener('click', function() {
-                        if (SettingsPasswordInputOne.type === 'password') {
-                            SettingsPasswordInputOne.type = 'text';
-                            SPIOTVI.className = 'fa-regular fa-eye SettingsToggleVisibilityIcon';
-                        } else {
-                            SettingsPasswordInputOne.type = 'password';
-                            SPIOTVI.className = 'fa-regular fa-eye-slash SettingsToggleVisibilityIcon';
-                        }
-                        });
-
-
-                        const SettingsPasswordInputTwo = document.getElementById('SettingsPasswordInputTwo');
-                        const SPITTVI = document.getElementById('SPITTVI');
-
-                        SPITTVI.addEventListener('click', function() {
-                        if (SettingsPasswordInputTwo.type === 'password') {
-                            SettingsPasswordInputTwo.type = 'text';
-                            SPITTVI.className = 'fa-regular fa-eye SettingsToggleVisibilityIcon';
-                        } else {
-                            SettingsPasswordInputTwo.type = 'password';
-                            SPITTVI.className = 'fa-regular fa-eye-slash SettingsToggleVisibilityIcon';
-                        }
-                        });
-
-
-                        function ClearPasswordSettings() {
-                            document.getElementById('settingsNewKeyName').value = "";
-                            document.getElementById('SettingsKeyType').value = "";
-                            document.getElementById('EncryotionType').value = "";
-                            document.getElementById('SettingsPasswordInputOne').value = "";
-                            document.getElementById('SettingsPasswordInputTwo').value = "";
-                        }
-                    </script>
                     <br>
                     <button id="CreateNewPaswdButton">Create New Key</button>
                 </div>
+
+                <!-- /////////////////////////// Shared Key Settings ////////////////////////////////////// -->
+
                 <div class="hr"> </div>
                 <div class="settingArea">
                     <h2>Add Key</h2>
@@ -542,6 +496,7 @@
                     <br>
                     <button id="addSharedKey">Add Key</button>
                 </div>
+
                 <script>
                     // Add shared key button
                     document.getElementById('addSharedKey').addEventListener('click', function() {
@@ -553,6 +508,8 @@
                         }
                     })
                 </script>
+
+                <!-- /////////////////////////// Other Settings ////////////////////////////////////// -->
                 <div class="hr"> </div>
                     <!-- Other settings -->
                 <div class="settings-other">
@@ -586,14 +543,16 @@
                             return /^\d*$/.test(value) && (value === "" || parseInt(value) <= 999); }, "Must be between 0 and 999");
                     </script>
 
-
                 </div>
                 <br>
+                <!-- //////////////////////////////////////////////////////////////////////////////// -->
             </div>
         </div>
         <script src="settings.js"></script>
 
-        <div class="helpPage" id="helpPage">
+<!-- ################################################# Help Page ############################################################## -->
+
+<div class="helpPage" id="helpPage">
             <div class="main-content">
                 <div class="topbar">
                     <h2>Help and Information Page</h2>
@@ -604,16 +563,20 @@
 
     </div>
 
+
+<!-- ################################################# Create App ############################################################## -->
     <script>
-        // Exits out of the entire procsses
-        class kissMyAss { // Ingnore this lol
+        // Calls function to finally close everything
+        class kissMyAss {
             exit(bool) {
                 if (bool) {
                     pywebview.api.close();
                 }
             }
         }
+        kma = new kissMyAss;
 
+        // Makes the application (This is used for stuff that runs api on start up)
         function make() {
             // Show hidden files toggle
             const ShowHiddenCheckbox = document.getElementById("ShowHiddenCheckbox");
@@ -622,30 +585,29 @@
             // Load window varible in keyMeth class
             pywebview.api.keyMeth.loadWindow();
 
-
             fileExp.make();
-            // New Page Button
-            document.getElementById('SidbarAdditinalIcon').addEventListener('click', function() { pywebview.api.newPage(); });
     
-            /* This handels the pressing of the Menu's password button */
+            ////////////////////////////////////////////////////////////////////////////////
+            /* Handles selecting an password option in the password page */
             document.getElementById('passwordBtn').addEventListener('click', function() {
                 const selectElement = document.getElementById('keyNameInput');
                 pywebview.api.keyMeth.handelKeyIndex(passwordInput.value, selectElement.value, salt_file);
                 passwordInput.value = '';
             });
-
-            // This handels the pressing of the Menu's password button
+            /* Handels the pressing of the sidebars password page button */
             document.getElementById('sidebarPasswordIcon').addEventListener('click', function() {
                 changePage('passwordPage');
                 pywebview.api.keyMeth.updateKeyNames();
             });
-
-            // This handels the pressing of the Menu's settings button
+            /* Handels the pressing of the sidebars setttings page button */
             document.getElementById('SidebarSettingIcon').addEventListener('click', function() {
                 changePage('settingsPage');
                 pywebview.api.keyMeth.updateKeyNames();
             });
+            ////////////////////////////////////////////////////////////////////////////////
 
+            ////////////////////////////////////////////////////////////////////////////////
+            /* Create new password button */
             document.getElementById('CreateNewPaswdButton').addEventListener('click', function() {
                 const Name = document.getElementById('settingsNewKeyName').value;
                 const KeyType = document.getElementById('SettingsKeyType').value;
@@ -672,10 +634,7 @@
                 showModalOK("Creating New Key", `The key \"${Name}\" is being created, this will take a few seconds and you will be notified when it's finished.`, "Okay");
                 pywebview.api.keyMeth.createKey(Name, pswd, KeyTypePush, encryptionMethodPush);
             });
-
-            // Class that exits the entire process
-            kma = new kissMyAss;
-
+            ////////////////////////////////////////////////////////////////////////////////
         }
     </script>
 </body>
