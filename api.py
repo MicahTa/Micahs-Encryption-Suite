@@ -6,11 +6,16 @@ import webview
 
 from Encrypt import *
 
-
+from modal import *
 from globalVaribles import *
 from Encrypt import *
 from RemoveANDCopy import *
 from KeyMethods import keyMethods
+
+# TODO create a option in settings to try and restore currpted key documents
+
+
+
 
 
 def is_hidden(path):
@@ -201,7 +206,7 @@ class Api:
         #TODO add overWrightPreExisiting functinality
         global key, queue
         if key is None:
-            self.keyMeth.noKey()
+            modal.code("NoKey")
         else:
             for target in targets:
                 id = generate_random_string(20)
@@ -212,7 +217,7 @@ class Api:
         """ This starts the decryption """
         global key, queue
         if key is None:
-            self.keyMeth.noKey()
+            modal.code("NoKey")
         else:
             for target in targets:
                 id = generate_random_string(20)
@@ -266,7 +271,7 @@ class Api:
         try:
             if encrpytion:
                 if key is None:
-                    self.keyMeth.noKey()
+                    modal.code("NoKey")
                 else:
                     with open(f'{os.path.dirname(location)}/{encrypt_name(os.path.basename(location), key)}', 'wb') as file:
                         file.write(encrypt(b'', key))
@@ -287,7 +292,7 @@ class Api:
         try:
             if encrpytion:
                 if key is None:
-                    self.keyMeth.noKey()
+                    modal.code("NoKey")
                 else:
                     os.makedirs(f'{os.path.dirname(location)}/{encrypt_name(os.path.basename(location), key)}', exist_ok=False)
             else:
