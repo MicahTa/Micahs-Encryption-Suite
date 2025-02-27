@@ -4,7 +4,9 @@ import base64
 from Crypto.Protocol.KDF import PBKDF2
 from hashlib import sha256
 import hmac
+import datetime
 
+from modal import *
 from globalVaribles import *
 from Encrypt import *
 
@@ -24,15 +26,31 @@ class keyMethods:
     def loadWindow(self):
         global window
         window=shared_dict['my_global_var']
-
-    def noKey(self):
-        """
-        Sends warning to user saying there is no key selected
-        """
-        window.evaluate_js('showModalOK("No key Selected", "No key has been selected and unlocked. This must be done before any decrypting or encrypting can take place. Please select the shield icon on the left bar to do so.", "Okay");')
     
     def wrongPass(self):
-        window.evaluate_js('showModalOK("Wrong Password", "You either entered the wrong password or you used the wrong/no salt file when it was required.", "Okay");')
+        modal.code("WrongPass")
+
+    def backup(self):
+        try:
+            with open('secured_keys.json', 'rb') as f:
+                # Load the JSON data from the file
+                data = f.read()
+
+            now = datetime.datetime.now()
+            # Format the date as "mm-dd-yyyy-hh-mm--ss"
+            formatted_date = now.strftime("%m-%d-%Y-%H-%M-%S")
+
+            with open(f'./KeysBackup/backup{formatted_date}.json', 'wb') as f:
+                # Load the JSON data from the file
+                f.write(data)
+
+            with open('secured_keys.json', 'w') as f:
+                f.write("{}")
+        except:
+            modal.ok("Error Creating Backup", "There was an error when creating your backup. If keys cannot be accesed they will be in the backup folder and naimed by the data and time.")
+            return False
+        else:
+            return True
 
     def verifyPassword(self, name: str, password: str, salt: str = None) -> bool:
         """
@@ -41,10 +59,14 @@ class keyMethods:
         :password -> Password to verify
         :salt -> path to salt file
         """
-        with open('secured_keys.json', 'r') as f:
-            # Load the JSON data from the file
-            data = json.load(f)
-        
+        try:
+            with open('secured_keys.json', 'r') as f:
+                # Load the JSON data from the file
+                data = json.load(f)
+        except:
+            modal.code("ReadingKeys")
+            return None
+
         # Decrypt Key
         if data[name]["type"] == "passwordBased":
             key = self.PDkey(password, salt, True, False, name)
@@ -88,6 +110,8 @@ class keyMethods:
         :password -> password of key
         :salt -> path to salt file
         """
+        # TODO ask are you sure
+        # TODO if you deleate the key you currently have loaded unload it
         # Validate it matches
         validation = self.verifyPassword(name, password, salt)
 
@@ -95,17 +119,20 @@ class keyMethods:
             self.wrongPass()
             return None
 
+        try:
+            with open('secured_keys.json', 'r') as f:
+                # Load the JSON data from the file
+                data = json.load(f)
 
-        with open('secured_keys.json', 'r') as f:
-            # Load the JSON data from the file
-            data = json.load(f)
+            # Remove name
+            del data[name]
 
-        # Remove name
-        del data[name]
-
-        # Wright it out
-        with open('secured_keys.json', 'w') as f:
-            json.dump(data, f)
+            # Wright it out
+            with open('secured_keys.json', 'w') as f:
+                json.dump(data, f)
+        except:
+            modal.code("ReadingKeys")
+            return None
         
         # Update everything
         self.updateKeyNames()
@@ -120,10 +147,14 @@ class keyMethods:
         :salt -> Salt file path
         """
         # Open the json file with the secured keys
-        with open('secured_keys.json', 'r') as f:
-            # Load the JSON data from the file
-            data = json.load(f)
-        
+        try:
+            with open('secured_keys.json', 'r') as f:
+                # Load the JSON data from the file
+                data = json.load(f)
+        except:
+            modal.code("ReadingKeys")
+            return None
+
         validation = self.verifyPassword(name, password, salt)
 
         # Auth
@@ -142,8 +173,12 @@ class keyMethods:
         del data[name]
 
         # Wright it out
-        with open('secured_keys.json', 'w') as f:
-            json.dump(data, f)
+        try:
+            with open('secured_keys.json', 'w') as f:
+                json.dump(data, f)
+        except:
+            modal.code("ReadingKeys")
+            return None
         
         # Update everything
         self.updateKeyNames()
@@ -158,8 +193,9 @@ class keyMethods:
         :password -> Password of the key
         :newPassword -> Password for the next user
         """
+        # TODO create a shared key system
         sharedKeyString = 'AHHHHHHHHHH'
-        window.evaluate_js(f'showModalOK("Shared Key", "{sharedKeyString}", "Okay");')
+        modal.ok("Shared Key", sharedKeyString)
 
 
     def addSharedKey(self, string: str): # TODO This
@@ -189,20 +225,25 @@ class keyMethods:
             salt = b'\x9cmNx\xa5\xd6\xdf\x98\x10Zr\xe0\xd4\xeb\x989'
 
         # Open the json file with the secured keys
-        with open('secured_keys.json', 'r') as f:
-            # Load the JSON data from the file
-            data = json.load(f)
+        try:
+            with open('secured_keys.json', 'r') as f:
+                # Load the JSON data from the file
+                data = json.load(f)
+        except:
+            self.backup() 
+            modal.code("ReadingKeys")
+            data = {}
 
         # Check if there is a duplicate key
         if name in data:
             # Send error and exit
-            window.evaluate_js('showModalOK("Duplicate Key", "You have entered an invalid name, due to it already existing or being blocked. Please try another name. (:", "Okay");')
+            modal.code("InvalidKeyName")
             return None
         
         # Blacklisted names
         if name.lower() in ["", "password based", "passwordbased"] or type(name) != str:
             # Send error and exit
-            window.evaluate_js('showModalOK("Invalid name", "You have entered an invalid name, due to it being blocked. Please try another name. (:", "Okay");')
+            modal.code("InvalidKeyName")
             return None
 
         # Create the auth string and secureKey (if applicable)
@@ -224,11 +265,16 @@ class keyMethods:
         add = {"type": 'passwordBased' if Keytype == 'PD' else 'keyBased', "secureKey": secureKey, "encryption_method": "AES256", "auth": auth}
         data[name] = add
         # Wright it out
-        with open('secured_keys.json', 'w') as f:
-            json.dump(data, f)
+        try:
+            with open('secured_keys.json', 'w') as f:
+                json.dump(data, f)
+        except:
+            modal.code("ReadingKeys")
+            return None
         
         # Clear the password and tell user its done
-        window.evaluate_js(f'ClearPasswordSettings(); showModalOK("New Key Created", "The key \\\"{name}\\\" has been created and is now being set to the current key!", "Okay");')
+        window.evaluate_js(f'ClearPasswordSettings();')
+        modal.ok("New Key Created", f"The key \\\"{name}\\\" has been created and is now being set to the current key!")
         
         # Update all the key names
         self.updateKeyNames()
@@ -254,26 +300,30 @@ class keyMethods:
             self.PDkey(password, salt)
         else:
             # Open the js file
-            with open('secured_keys.json', 'r') as f:
-                data = json.load(f)
+            try:
+                with open('secured_keys.json', 'r') as f:
+                    data = json.load(f)
+            except:
+                modal.code("ReadingKeys")
+                return None
 
-                # Make shure the index relates to something
-                try:
-                    # Get name from index
-                    name = self.keyOptions[int(keyName)]
-                except:
-                    # Show error if no cooralation and exit
-                    window.evaluate_js(f'showModalOK("Something went wrong", "The key you used seemed to not have a valid type, try updating the software or restoring a backup of the Keys", "Okay");')
-                    return None
+            # Make shure the index relates to something
+            try:
+                # Get name from index
+                name = self.keyOptions[int(keyName)]
+            except:
+                # Show error if no cooralation and exit
+                modal.code("InvalidKeyType")
+                return None
 
-                # Send to proper funtion to handel key
-                if data[name]['type'] == "passwordBased":
-                    self.PDkey(password, salt, name=keyName)
-                elif data[name]['type'] == "keyBased":
-                    self.KDkey(self.keyOptions[int(keyName)], password, salt)
-                else:
-                    # Show error just in case
-                    window.evaluate_js(f'showModalOK("Something went wrong", "The key you used seemed to not have a valid type, try updating the software or restoring a backup of the Keys", "Okay");')
+            # Send to proper funtion to handel key
+            if data[name]['type'] == "passwordBased":
+                self.PDkey(password, salt, name=keyName)
+            elif data[name]['type'] == "keyBased":
+                self.KDkey(self.keyOptions[int(keyName)], password, salt)
+            else:
+                # Show error just in case
+                modal.code("InvalidKeyType")
 
         if self.api is not None:
             self.api.refreshFileExp()
@@ -287,24 +337,28 @@ class keyMethods:
         SettingsArray = []
         
         # Open the json file and read it
-        with open('secured_keys.json', 'r') as f:
-            data = json.load(f)
+        try:
+            with open('secured_keys.json', 'r') as f:
+                data = json.load(f)
+        except:
+            modal.code("ReadingKeys")
+            return None
+        
+        # Go through the data
+        for i in data:
+            # Add names to the password page
+            optionsArray.append(i)
 
-            # Go through the data
-            for i in data:
-                # Add names to the password page
-                optionsArray.append(i)
-
-                # Get the type for the settings page
-                keyType = ""
-                if data[i]['type'] == 'passwordBased': keyType = 'PD'
-                elif data[i]['type'] == 'keyBased': keyType = 'KD'
-                else: # This should not happen unless someone has messed with the json file or the json file was made with a later version of the app
-                    # Show the error and quit
-                    window.evaluate_js(f'showModalOK("ERROR", "There has been an error with the json file storing the key, try to update the application and if that doesn\'t work restore to a previous backup of the json file.", "Okay");')
-                    return None
-                # Add the name and the type to the list
-                SettingsArray.append({"name": i, "type": keyType})
+            # Get the type for the settings page
+            keyType = ""
+            if data[i]['type'] == 'passwordBased': keyType = 'PD'
+            elif data[i]['type'] == 'keyBased': keyType = 'KD'
+            else: # This should not happen unless someone has messed with the json file or the json file was made with a later version of the app
+                # Show the error and quit
+                modal.code('ReadingKeys')
+                return None
+            # Add the name and the type to the list
+            SettingsArray.append({"name": i, "type": keyType})
 
         # self.keyOptions is used to get the name from the index
         self.keyOptions = optionsArray
@@ -343,38 +397,43 @@ class keyMethods:
             if name is None:
                 key = tmp_key
             # Open the keys file
-            with open('secured_keys.json', 'r') as f:
-                data = json.load(f)
-                # Go through the data
-                for item in (data):
-                    # If the key type is password based go on
-                    if data[item]["type"] == "passwordBased":
-                        # See if key coorasponds with the name
-                        if base64.b64encode(encrypt(item.encode('utf-8'), tmp_key)).decode('utf-8') == data[item]["auth"]:
-                            # Update title and say we found it
-                            window.title = f'Micah\'s Encryption Suite -- Key: {item}'
-                            commented = True
-                            # If we are not checking key name
-                            if name is None:
-                                # Notify who it belongs to
-                                if notify: window.evaluate_js(f'showModalOK("Password Assigned to \\\"{item}\\\"", "The password you used is assigned to \\\"{item}\\\"", "Okay");')
-                            # If we are checking key name
-                            else:
-                                # Update Key
-                                key = tmp_key
-                            break
-                                
+            try:
+                with open('secured_keys.json', 'r') as f:
+                    data = json.load(f)
+            except:
+                modal.code("ReadingKeys")
+                return None
 
-                # If no cooraspondace is found
-                if not commented:
-                    # If we arn't checking key name
-                    if name is None:
-                        # Update title and give a warning message
-                        window.title = 'Micah\'s Encryption Suite -- Key: PSWD Based'
-                        window.evaluate_js(f'showModalOK("Password not Assigned", "The password you used is not assigned to anything. You can still use it, however, it is good to assign the password to a key in settings. This is to detect mistyped passwords.", "Okay");')
-                    else:
-                        # Otherwise give a wrong password error
-                        self.wrongPass()
+            # Go through the data
+            for item in (data):
+                # If the key type is password based go on
+                if data[item]["type"] == "passwordBased":
+                    # See if key coorasponds with the name
+                    if base64.b64encode(encrypt(item.encode('utf-8'), tmp_key)).decode('utf-8') == data[item]["auth"]:
+                        # Update title and say we found it
+                        window.title = f'Micah\'s Encryption Suite -- Key: {item}'
+                        commented = True
+                        # If we are not checking key name
+                        if name is None:
+                            # Notify who it belongs to
+                            if notify: modal.ok(f"Password Assigned to \\\"{item}\\\"", f"The password you used is assigned to \\\"{item}\\\"")
+                        # If we are checking key name
+                        else:
+                            # Update Key
+                            key = tmp_key
+                        break
+                            
+
+            # If no cooraspondace is found
+            if not commented:
+                # If we arn't checking key name
+                if name is None:
+                    # Update title and give a warning message
+                    window.title = 'Micah\'s Encryption Suite -- Key: PSWD Based'
+                    modal.ok("Password not Assigned", "The password you used is not assigned to anything. You can still use it, however, it is good to assign the password to a key in settings. This is to detect mistyped passwords.")
+                else:
+                    # Otherwise give a wrong password error
+                    self.wrongPass()
 
     def KDkey(self, name: str, password: str, salt: str = None, ret: bool = False):
         """
@@ -390,22 +449,26 @@ class keyMethods:
 
         global key
         # TODO add saftey stuff
-        with open('secured_keys.json', 'r') as f:
-            # Load the JSON data from the file
-            data = json.load(f)
+        try:
+            with open('secured_keys.json', 'r') as f:
+                # Load the JSON data from the file
+                data = json.load(f)
+        except:
+            modal.code("ReadingKeys")
+            return None
+        
+        passwordKey = self.PDkey(password, salt, True)
+        unValidatedKey = decrypt_data(base64.b64decode(data[name]["secureKey"].encode('utf-8')), passwordKey)
+        try:
+            auth = base64.b64encode(encrypt(base64.b64encode(name.encode("utf-8")), unValidatedKey)).decode('utf-8')
+        except:
+            auth = 'Wrong'
 
-            passwordKey = self.PDkey(password, salt, True)
-            unValidatedKey = decrypt_data(base64.b64decode(data[name]["secureKey"].encode('utf-8')), passwordKey)
-            try:
-                auth = base64.b64encode(encrypt(base64.b64encode(name.encode("utf-8")), unValidatedKey)).decode('utf-8')
-            except:
-                auth = 'Wrong'
-
-            if data[name]["auth"] == auth:
-                if ret:
-                    return unValidatedKey
-                else:
-                    key = unValidatedKey
-                    window.title = f'Micah\'s Encryption Suite -- Key: {name}'
-            elif not ret:
-                self.wrongPass()
+        if data[name]["auth"] == auth:
+            if ret:
+                return unValidatedKey
+            else:
+                key = unValidatedKey
+                window.title = f'Micah\'s Encryption Suite -- Key: {name}'
+        elif not ret:
+            self.wrongPass()
